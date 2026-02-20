@@ -21,6 +21,7 @@ import { getAnalysisTools, handleAnalysisTool } from "./analysis.js";
 import { getStrategyTools, handleStrategyTool } from "./strategy.js";
 import { getScoringTools, handleScoringTool } from "./scoring.js";
 import { getSectorTools, handleSectorTool } from "./sector.js";
+import { getSlackTools, handleSlackTool } from "./slack.js";
 
 type ToolHandler = (
   name: string,
@@ -41,6 +42,7 @@ export function registerAllTools(server: Server): void {
     ...getDiscoveryTools(),
     ...getEnrichmentTools(),
     ...getStorageTools(),
+    ...getSlackTools(),
   ];
 
   // Handler chain — try each handler in order until one returns a result
@@ -53,6 +55,7 @@ export function registerAllTools(server: Server): void {
     handleDiscoveryTool,
     handleEnrichmentTool,
     handleStorageTool,
+    handleSlackTool,
   ];
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
