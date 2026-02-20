@@ -3,7 +3,7 @@
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { searchProspectsBrightData, searchProspectsApollo } from "../apis/discovery.js";
+import { searchProspectsBrightData } from "../apis/discovery.js";
 import { searchZefix, getZefixSogcByDateRange } from "../apis/zefix.js";
 import { scrapeWebsite } from "../apis/scraper.js";
 
@@ -12,7 +12,7 @@ export function getDiscoveryTools(): Tool[] {
     {
       name: "prospect_search",
       description:
-        "Search for prospects by sector, location, keywords using Bright Data SERP (Google LinkedIn X-ray) + Apollo.io fallback. Returns names, headlines, companies, LinkedIn URLs.",
+        "Search for prospects by sector, location, keywords using Bright Data SERP (Google LinkedIn X-ray). Returns names, headlines, companies, LinkedIn URLs.",
       inputSchema: {
         type: "object" as const,
         properties: {
@@ -22,11 +22,6 @@ export function getDiscoveryTools(): Tool[] {
           location: { type: "string", description: "Location filter (e.g. 'Geneva', 'Suisse romande')" },
           keywords: { type: "string", description: "Additional keywords" },
           limit: { type: "number", description: "Max results (default 10, max 20)" },
-          source: {
-            type: "string",
-            enum: ["bright_data", "apollo", "auto"],
-            description: "Data source: bright_data (SERP), apollo (API), or auto (try Bright Data first, fallback to Apollo). Default: auto",
-          },
         },
         required: ["query"],
       },
@@ -93,53 +88,19 @@ async function handleProspectSearch(
   args: Record<string, unknown>
 ): Promise<{ content: Array<{ type: "text"; text: string }> }> {
   try {
-    const source = (args.source as string) || "auto";
     const query = (args.query as string) || "";
     const limit = Math.min((args.limit as number) || 10, 20);
 
-    if (source === "apollo") {
-      const result = await searchProspectsApollo({
-        person_titles: args.role ? [args.role as string] : undefined,
-        person_locations: args.location ? [args.location as string] : undefined,
-        q_organization_keyword_tags: query ? [query] : undefined,
-        per_page: limit,
-      });
-      return jsonResult(result);
-    }
+    const result = await searchProspectsBrightData({
+      query,
+      role: args.role as string | undefined,
+      industry: args.industry as string | undefined,
+      location: args.location as string | undefined,
+      keywords: args.keywords as string | undefined,
+      limit,
+    });
 
-    // Bright Data (default or auto)
-    try {
-      const result = await searchProspectsBrightData({
-        query,
-        role: args.role as string | undefined,
-        industry: args.industry as string | undefined,
-        location: args.location as string | undefined,
-        keywords: args.keywords as string | undefined,
-        limit,
-      });
-
-      if (result.prospects.length > 0 || source === "bright_data") {
-        return jsonResult(result);
-      }
-    } catch (err) {
-      if (source === "bright_data") {
-        return errorResult(`Bright Data SERP error: ${err instanceof Error ? err.message : String(err)}`);
-      }
-      console.error("[prospect_search] Bright Data failed, trying Apollo fallback:", err);
-    }
-
-    // Apollo fallback
-    try {
-      const result = await searchProspectsApollo({
-        person_titles: args.role ? [args.role as string] : undefined,
-        person_locations: args.location ? [args.location as string] : undefined,
-        q_organization_keyword_tags: query ? [query] : undefined,
-        per_page: limit,
-      });
-      return jsonResult({ ...result, source: "apollo_fallback" });
-    } catch (err) {
-      return errorResult(`Both Bright Data and Apollo failed. Apollo error: ${err instanceof Error ? err.message : String(err)}`);
-    }
+    return jsonResult(result);
   } catch (err) {
     return errorResult(`prospect_search error: ${err instanceof Error ? err.message : String(err)}`);
   }
