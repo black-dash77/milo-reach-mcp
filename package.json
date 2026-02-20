@@ -1,0 +1,39 @@
+{
+  "name": "milo-reach-mcp",
+  "version": "1.0.0",
+  "description": "Milo Reach — Marketing expert brain + execution MCP server for Claude Code. 250+ neuromarketing knowledge atoms, prospect discovery, enrichment, and strategic analysis.",
+  "type": "module",
+  "bin": {
+    "milo-reach-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@supabase/supabase-js": "^2.49.4",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "marketing",
+    "neuromarketing",
+    "freelance",
+    "claude",
+    "prospection",
+    "growth"
+  ],
+  "license": "MIT"
+}
